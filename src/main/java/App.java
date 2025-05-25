@@ -1,6 +1,9 @@
 import model.Credential;
+import service.AuthService;
 import service.CredentialStorage;
 import service.EncryptionService;
+import utils.PasswordGenerator;
+
 import java.util.List;
 import java.util.Scanner;
 
@@ -37,8 +40,18 @@ public class App {
 					String service = scanner.nextLine();
 					System.out.print("Username: ");
 					String user = scanner.nextLine();
-					System.out.print("Password: ");
-					String pass = scanner.nextLine();
+
+					System.out.print("Generate a strong password automatically? (y/n): ");
+					String choice = scanner.nextLine().trim().toLowerCase();
+					String pass;
+
+					if (choice.equals("y")) {
+						pass = PasswordGenerator.generate(16, true, true, true, true);
+						System.out.println("Generated password: " + pass);
+					} else {
+						System.out.print("Password: ");
+						pass = scanner.nextLine();
+					}
 
 					String encryptedPassword = EncryptionService.encrypt(pass);
 					credentials.add(new Credential(service, user, encryptedPassword));

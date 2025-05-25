@@ -27,34 +27,35 @@ public class AuthService {
 	 * and stores both securely in auth.dat.
 	 */
 	private void initialSetup() {
-		Scanner scanner = new Scanner(System.in);
-		System.out.print("Set your master password: ");
-		String plainPassword = scanner.nextLine();
+		try (Scanner scanner = new Scanner(System.in)) {
+			System.out.print("Set your master password: ");
+			String plainPassword = scanner.nextLine();
 
-		String hashedPassword = BCrypt.hashpw(plainPassword, BCrypt.gensalt());
-		String secret = TOTPService.generateSecret();
+			String hashedPassword = BCrypt.hashpw(plainPassword, BCrypt.gensalt());
+			String secret = TOTPService.generateSecret();
 
-		System.out.println("\nYour TOTP secret (store it in your 2FA app):");
-		System.out.println(secret);
+			System.out.println("\nYour TOTP secret (store it in your 2FA app):");
+			System.out.println(secret);
 
-		try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(AUTH_FILE))) {
-			writer.write(hashedPassword);
-			writer.newLine();
-			writer.write(secret);
-			System.out.println("\nSetup complete. Restart the application to login.");
-		} catch (IOException e) {
-			System.err.println("Error writing to auth.dat: " + e.getMessage());
+			try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(AUTH_FILE))) {
+				writer.write(hashedPassword);
+				writer.newLine();
+				writer.write(secret);
+				System.out.println("\nSetup complete. Restart the application to login.");
+			} catch (IOException e) {
+				System.err.println("Error writing to auth.dat: " + e.getMessage());
+			}
 		}
 	}
 
 	/**
-	 * Performs authentication with master password and TOTP code.
+	 * Performs authentication with primary password and TOTP code.
 	 */
 	private void authenticate() {
 		int attempts = 0;
 		final int MAX_ATTEMPTS = 3;
 
-		try {
+		try (Scanner scanner = new Scanner(System.in)) {
 			List<String> lines = Files.readAllLines(Paths.get(AUTH_FILE));
 			if (lines.size() < 2) {
 				System.err.println("Invalid auth.dat format.");
@@ -78,7 +79,7 @@ public class AuthService {
 				System.out.print("Enter TOTP code: ");
 				String code = scanner.nextLine();
 
-				if (TOTPService.verifyCode(storedSecret, code)) {
+				if (TOTPService.validateCode(storedSecret, code)) {
 					System.out.println("Authentication successful. Access granted.");
 					logAttempt("SUCCESS");
 					return;
@@ -97,15 +98,11 @@ public class AuthService {
 		}
 	}
 
-	public static void main(String[] args) {
-		new AuthService();
-	}
-
 	private void logAttempt(String result) {
 		String logLine = String.format("%s - [%s] %s",
 				java.time.LocalDateTime.now(),
 				result,
-				System.getProperty("user.name") // Pode usar IP ou username real no futuro
+				System.getProperty("user.name")
 		);
 
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter("access.log", true))) {
@@ -116,4 +113,7 @@ public class AuthService {
 		}
 	}
 
+	public static void main(String[] args) {
+		new AuthService();
+	}
 }

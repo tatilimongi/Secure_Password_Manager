@@ -22,13 +22,17 @@ public class TOTPService {
 	}
 
 	/**
-	 * Validates a TOTP code entered by the user, allowing for a small window of time drift.
+	 * Validates a TOTP code entered by the user, allowing a small window of time drift.
 	 *
 	 * @param base64Secret The Base64-encoded secret key.
 	 * @param inputCode    The TOTP code entered by the user.
 	 * @return true if the code is valid; false otherwise.
 	 */
 	public static boolean validateCode(String base64Secret, String inputCode) {
+		if (inputCode == null || inputCode.length() != CODE_DIGITS || !inputCode.matches("\\d+")) {
+			return false;
+		}
+
 		try {
 			long currentWindow = Instant.now().getEpochSecond() / TIME_STEP_SECONDS;
 			for (long offset = -1; offset <= 1; offset++) {

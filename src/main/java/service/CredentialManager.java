@@ -2,12 +2,12 @@ package service;
 
 import model.Credential;
 import utils.PasswordGenerator;
-
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-
 import java.util.*;
+import java.io.*;
+import java.nio.file.*;
+import java.awt.datatransfer.*;
+import java.awt.Toolkit;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class CredentialManager {
 	private List<Credential> credentials;
@@ -66,7 +66,7 @@ public class CredentialManager {
 		String choice = scanner.nextLine().trim().toLowerCase();
 		String password;
 		if (choice.equals("y")) {
-			password = PasswordGenerator.generate(16);
+			password = PasswordGenerator.generate(16, true, true, true, true);
 			System.out.println("Generated password: " + password);
 		} else {
 			System.out.print("Enter password: ");
@@ -178,11 +178,8 @@ public class CredentialManager {
 
 			Credential selected = credentials.get(index);
 			String decrypted = EncryptionService.decrypt(selected.getEncryptedPassword());
-
-			// Copiar para a área de transferência
 			copyToClipboard(decrypted);
 			System.out.printf("Password for %s copied to clipboard.%n", selected.getServiceName());
-
 		} catch (IOException e) {
 			System.err.println("Error reading auth.dat: " + e.getMessage());
 		} catch (Exception e) {
@@ -192,9 +189,9 @@ public class CredentialManager {
 
 	private void copyToClipboard(String text) {
 		try {
-			java.awt.datatransfer.StringSelection stringSelection = new java.awt.datatransfer.StringSelection(text);
-			java.awt.datatransfer.Clipboard clipboard = java.awt.Toolkit.getDefaultToolkit().getSystemClipboard();
-			clipboard.setContents(stringSelection, null);
+			StringSelection selection = new StringSelection(text);
+			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+			clipboard.setContents(selection, null);
 		} catch (Exception e) {
 			System.err.println("Clipboard operation not supported: " + e.getMessage());
 		}
@@ -213,6 +210,7 @@ public class CredentialManager {
 		try {
 			return Integer.parseInt(scanner.nextLine().trim());
 		} catch (NumberFormatException e) {
+			System.out.println("Invalid input. Please enter a number.");
 			return -1;
 		}
 	}
