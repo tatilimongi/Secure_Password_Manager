@@ -4,6 +4,7 @@ import service.CredentialStorage;
 import service.EncryptionService;
 import utils.PasswordGenerator;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Scanner;
@@ -228,8 +229,10 @@ public class App {
 		return sb.toString();
 	}
 
-	private static boolean checkPwned(String prefix, String suffix) throws Exception {
-		URL url = new URL("https://api.pwnedpasswords.com/range/" + prefix);
+	static boolean checkPwned(String prefix, String suffix) throws Exception {
+		URI uri = new URI("https", "api.pwnedpasswords.com", "/range/" + prefix, null);
+		URL url = uri.toURL();
+
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod("GET");
 		conn.setConnectTimeout(5000);
