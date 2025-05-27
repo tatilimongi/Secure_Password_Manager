@@ -2,7 +2,6 @@ import model.Credential;
 import service.AuthService;
 import service.CredentialStorage;
 import service.EncryptionService;
-import service.TOTPService;
 import utils.PasswordGenerator;
 
 import java.util.List;
@@ -19,13 +18,6 @@ public class App {
 			System.err.println("Authentication failed: " + e.getMessage());
 			return;
 		}
-
-//		// Generate and display TOTP Base32 secret for initial setup
-//		String base64Secret = TOTPService.generateSecret();
-//		String base32Secret = TOTPService.getBase32Secret(base64Secret);
-//		System.out.println("\nYour TOTP secret (store it in your 2FA app like Google Authenticator):");
-//		System.out.println(base32Secret);
-//		System.out.println("(This secret is generated every time the app starts. Persist it if needed!)");
 
 		List<Credential> credentials;
 
