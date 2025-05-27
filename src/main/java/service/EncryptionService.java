@@ -47,15 +47,15 @@ public class EncryptionService {
 
 		SecretKey key = getSecretKey(SECRET_KEY, SALT);
 
-		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
 
-		// Generate a random 16-byte IV
-		byte[] iv = new byte[16];
+		// Generate a random 12-byte IV (recommended size for GCM)
+		byte[] iv = new byte[12];
 		SecureRandom sr = new SecureRandom();
 		sr.nextBytes(iv);
-		IvParameterSpec ivSpec = new IvParameterSpec(iv);
+		GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv); // 128-bit authentication tag
 
-		cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+		cipher.init(Cipher.ENCRYPT_MODE, key, gcmSpec);
 		byte[] encrypted = cipher.doFinal(strToEncrypt.getBytes());
 
 		// Combine IV and encrypted bytes
