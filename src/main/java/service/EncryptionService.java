@@ -3,9 +3,9 @@ package service;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.crypto.spec.IvParameterSpec;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.Base64;
@@ -79,13 +79,12 @@ public class EncryptionService {
 			SecretKey key = getSecretKey(SECRET_KEY, SALT);
 			byte[] encryptedIvTextBytes = Base64.getDecoder().decode(strToDecrypt);
 
-			if (encryptedIvTextBytes.length < 17) { // 16 bytes IV and at least 1 byte ciphertext
+			if (encryptedIvTextBytes.length < 13) { // 12 byte IV and at least 1 byte ciphertext
 				throw new IllegalArgumentException("Invalid encrypted input length");
 			}
 
-			byte[] iv = new byte[16];
+			byte[] iv = new byte[12];
 			System.arraycopy(encryptedIvTextBytes, 0, iv, 0, iv.length);
-			IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
 			byte[] encryptedBytes = new byte[encryptedIvTextBytes.length - iv.length];
 			System.arraycopy(encryptedIvTextBytes, iv.length, encryptedBytes, 0, encryptedBytes.length);
