@@ -90,8 +90,9 @@ public class EncryptionService {
 			byte[] encryptedBytes = new byte[encryptedIvTextBytes.length - iv.length];
 			System.arraycopy(encryptedIvTextBytes, iv.length, encryptedBytes, 0, encryptedBytes.length);
 
-			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-			cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
+			Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+			GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
+			cipher.init(Cipher.DECRYPT_MODE, key, gcmSpec);
 			byte[] decrypted = cipher.doFinal(encryptedBytes);
 
 			return new String(decrypted);
