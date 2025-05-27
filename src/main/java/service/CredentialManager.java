@@ -53,7 +53,7 @@ public class CredentialManager {
 		for (int i = 0; i < credentials.size(); i++) {
 			Credential c = credentials.get(i);
 			System.out.printf("%d. Service: %s | Username: %s | Password: %s%n",
-					i + 1, c.getServiceName(), c.getUsername(), c.getEncryptedPassword());
+					i + 1, c.serviceName(), c.username(), c.encryptedPassword());
 		}
 	}
 
@@ -90,7 +90,7 @@ public class CredentialManager {
 		int index = getIntInput() - 1;
 		if (index >= 0 && index < credentials.size()) {
 			Credential removed = credentials.remove(index);
-			System.out.println("Removed: " + removed.getServiceName());
+			System.out.println("Removed: " + removed.serviceName());
 		} else {
 			System.out.println("Invalid index.");
 		}
@@ -101,9 +101,9 @@ public class CredentialManager {
 		String query = scanner.nextLine().trim().toLowerCase();
 		boolean found = false;
 		for (Credential c : credentials) {
-			if (c.getServiceName().toLowerCase().contains(query)) {
+			if (c.serviceName().toLowerCase().contains(query)) {
 				System.out.printf("Service: %s | Username: %s | Password: %s%n",
-						c.getServiceName(), c.getUsername(), c.getEncryptedPassword());
+						c.serviceName(), c.username(), c.encryptedPassword());
 				found = true;
 			}
 		}
@@ -140,8 +140,8 @@ public class CredentialManager {
 			}
 
 			Credential selected = credentials.get(index);
-			String decrypted = EncryptionService.decrypt(selected.getEncryptedPassword());
-			System.out.printf("Decrypted password for %s: %s%n", selected.getServiceName(), decrypted);
+			String decrypted = EncryptionService.decrypt(selected.encryptedPassword());
+			System.out.printf("Decrypted password for %s: %s%n", selected.serviceName(), decrypted);
 		} catch (IOException e) {
 			System.err.println("Error reading auth.dat: " + e.getMessage());
 		} catch (Exception e) {
@@ -177,9 +177,9 @@ public class CredentialManager {
 			}
 
 			Credential selected = credentials.get(index);
-			String decrypted = EncryptionService.decrypt(selected.getEncryptedPassword());
+			String decrypted = EncryptionService.decrypt(selected.encryptedPassword());
 			copyToClipboard(decrypted);
-			System.out.printf("Password for %s copied to clipboard.%n", selected.getServiceName());
+			System.out.printf("Password for %s copied to clipboard.%n", selected.serviceName());
 		} catch (IOException e) {
 			System.err.println("Error reading auth.dat: " + e.getMessage());
 		} catch (Exception e) {

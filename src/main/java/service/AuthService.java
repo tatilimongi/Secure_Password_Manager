@@ -1,119 +1,78 @@
 package service;
 
-import java.io.*;
 import java.nio.file.*;
-import java.util.*;
-import org.mindrot.jbcrypt.BCrypt;
+import java.util.Scanner;
 
 /**
- * AuthService handles master-password and TOTP-based authentication.
+ * AuthService handles user authentication and two-factor verification using TOTP.
+ * It prompts the user for password and TOTP code, and validates access.
  */
 public class AuthService {
-	private static final String AUTH_FILE = "auth.dat";
 
-	public AuthService() {
-		File file = new File(AUTH_FILE);
-		if (!file.exists()) {
-			System.out.println("=== First time setup ===");
-			initialSetup();
-		} else {
-			System.out.println("=== Authentication Required ===");
-			authenticate();
-		}
-	}
+	private static final String PASSWORD_FILE = "master_password.txt";
+	private static final int MAX_ATTEMPTS = 3;
+
+	private final Scanner scanner;
 
 	/**
-	 * First-time setup: asks for a password, hashes it, generates a TOTP secret,
-	 * and stores both securely in auth.dat.
+	 * Initializes the AuthService and performs the authentication process.
+	 * It loads or creates the master password and validates TOTP.
+	 *
+	 * @param scanner A Scanner instance for reading user input.
+	 * @throws Exception If authentication fails after multiple attempts.
 	 */
-	private void initialSetup() {
-		try (Scanner scanner = new Scanner(System.in)) {
-			System.out.print("Set your master password: ");
-			String plainPassword = scanner.nextLine();
+	public AuthService(Scanner scanner) throws Exception {
+		this.scanner = scanner;
+		String masterPassword = loadOrCreatePassword();
+		String totpSecret = TOTPService.loadOrCreateSecret();
 
-			String hashedPassword = BCrypt.hashpw(plainPassword, BCrypt.gensalt());
-			String secret = TOTPService.generateSecret();
+		System.out.println("\nTwo-Factor Authentication (TOTP) is enabled.");
+		System.out.println("Use this secret in your authenticator app if not already registered:");
+		System.out.println(TOTPService.getBase32Secret(totpSecret));
+		System.out.println("Alternatively, scan a QR code using this URL:");
+		System.out.println(TOTPService.getOtpAuthUrl(totpSecret, "user@example.com", "SecurePasswordManager"));
 
-			System.out.println("\nYour TOTP secret (store it in your 2FA app):");
-			System.out.println(secret);
+		for (int attempts = 1; attempts <= MAX_ATTEMPTS; attempts++) {
+			System.out.print("\nEnter master password: ");
+			String inputPassword = scanner.nextLine();
 
-			try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(AUTH_FILE))) {
-				writer.write(hashedPassword);
-				writer.newLine();
-				writer.write(secret);
-				System.out.println("\nSetup complete. Restart the application to login.");
-			} catch (IOException e) {
-				System.err.println("Error writing to auth.dat: " + e.getMessage());
+			if (!inputPassword.equals(masterPassword)) {
+				System.out.println("Incorrect password.");
+				continue;
 			}
-		}
-	}
 
-	/**
-	 * Performs authentication with primary password and TOTP code.
-	 */
-	private void authenticate() {
-		int attempts = 0;
-		final int MAX_ATTEMPTS = 3;
+			System.out.print("Enter current TOTP code: ");
+			String inputCode = scanner.nextLine();
 
-		try (Scanner scanner = new Scanner(System.in)) {
-			List<String> lines = Files.readAllLines(Paths.get(AUTH_FILE));
-			if (lines.size() < 2) {
-				System.err.println("Invalid auth.dat format.");
+			if (TOTPService.validateCode(totpSecret, inputCode)) {
+				System.out.println("Authentication successful.");
 				return;
+			} else {
+				System.out.println("Invalid TOTP code.");
 			}
-
-			String storedHash = lines.get(0);
-			String storedSecret = lines.get(1);
-
-			while (attempts < MAX_ATTEMPTS) {
-				System.out.print("Enter master password: ");
-				String inputPassword = scanner.nextLine();
-
-				if (!BCrypt.checkpw(inputPassword, storedHash)) {
-					attempts++;
-					System.out.println("Incorrect password. Attempts left: " + (MAX_ATTEMPTS - attempts));
-					logAttempt("FAIL_PASSWORD");
-					continue;
-				}
-
-				System.out.print("Enter TOTP code: ");
-				String code = scanner.nextLine();
-
-				if (TOTPService.validateCode(storedSecret, code)) {
-					System.out.println("Authentication successful. Access granted.");
-					logAttempt("SUCCESS");
-					return;
-				} else {
-					attempts++;
-					System.out.println("Invalid TOTP code. Attempts left: " + (MAX_ATTEMPTS - attempts));
-					logAttempt("FAIL_TOTP");
-				}
-			}
-
-			System.out.println("Too many failed attempts. Exiting.");
-			logAttempt("LOCKOUT");
-
-		} catch (IOException e) {
-			System.err.println("Error reading auth.dat: " + e.getMessage());
 		}
+
+		throw new Exception("Authentication failed after maximum attempts.");
 	}
 
-	private void logAttempt(String result) {
-		String logLine = String.format("%s - [%s] %s",
-				java.time.LocalDateTime.now(),
-				result,
-				System.getProperty("user.name")
-		);
-
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter("access.log", true))) {
-			writer.write(logLine);
-			writer.newLine();
-		} catch (IOException e) {
-			System.err.println("Error writing to access.log: " + e.getMessage());
+	/**
+	 * Loads the master password from a file, or creates a new one if not found.
+	 *
+	 * @return The master password.
+	 * @throws Exception If password cannot be read or written.
+	 */
+	private String loadOrCreatePassword() throws Exception {
+		Path path = Paths.get(PASSWORD_FILE);
+		if (Files.exists(path)) {
+			return Files.readString(path).trim();
 		}
-	}
 
-	public static void main(String[] args) {
-		new AuthService();
+		System.out.println("No master password found. Please create one now.");
+		System.out.print("New password: ");
+		String newPassword = scanner.nextLine();
+
+		Files.writeString(path, newPassword);
+		System.out.println("Master password saved.");
+		return newPassword;
 	}
 }

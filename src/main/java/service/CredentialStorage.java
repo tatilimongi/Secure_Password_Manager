@@ -2,9 +2,15 @@ package service;
 
 import model.Credential;
 
-import java.io.*;
-import java.nio.file.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CredentialStorage {
 	private static final Path FILE_PATH = Paths.get("credentials.dat");
@@ -16,12 +22,12 @@ public class CredentialStorage {
 		List<String> encryptedLines = new ArrayList<>();
 
 		for (Credential cred : credentials) {
-			if (cred.getServiceName() == null || cred.getUsername() == null || cred.getEncryptedPassword() == null) {
+			if (cred.serviceName() == null || cred.username() == null || cred.encryptedPassword() == null) {
 				System.err.println("Skipping invalid credential (null fields).");
 				continue;
 			}
 
-			String line = cred.getServiceName() + "," + cred.getUsername() + "," + cred.getEncryptedPassword();
+			String line = cred.serviceName() + "," + cred.username() + "," + cred.encryptedPassword();
 			String encrypted = EncryptionService.encrypt(line);
 			encryptedLines.add(encrypted);
 		}

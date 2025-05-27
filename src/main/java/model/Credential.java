@@ -1,27 +1,19 @@
 package model;
 
-public class Credential {
-	private String serviceName;
-	private String username;
-	private String encryptedPassword;
-
-	public Credential(String serviceName, String username, String encryptedPassword) {
-		this.serviceName = serviceName;
-		this.username = username;
-		this.encryptedPassword = encryptedPassword;
+/**
+ * Represents a saved user credential for a specific service.
+ */
+public record Credential(String serviceName, String username, String encryptedPassword) {
+	/**
+	 * Constructs a new Credential.
+	 *
+	 * @param serviceName       the name of the service (e.g., "Gmail")
+	 * @param username          the username associated with the service
+	 * @param encryptedPassword the password, already encrypted
+	 */
+	public Credential {
 	}
 
-	public String getServiceName() {
-		return serviceName;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public String getEncryptedPassword() {
-		return encryptedPassword;
-	}
 
 	@Override
 	public String toString() {
