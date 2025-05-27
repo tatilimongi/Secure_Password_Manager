@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 /**
  * AuthService handles user authentication and two-factor verification using TOTP.
- * It prompts the user for password and TOTP code, and validates access.
+ * It prompts the user for password and TOTP code and validates access.
  */
 public class AuthService {
 
@@ -58,10 +58,10 @@ public class AuthService {
 	}
 
 	/**
-	 * Loads the master password from a file, or creates a new one if not found.
+	 * Loads the master password from a file or creates a new one if not found.
 	 *
 	 * @return The master password.
-	 * @throws Exception If password cannot be read or written.
+	 * @throws Exception If the password cannot be read or written.
 	 */
 	private String loadOrCreatePassword() throws Exception {
 		Path path = Paths.get(PASSWORD_FILE);
