@@ -74,7 +74,7 @@ public class CredentialManager {
 		}
 	}
 
-	private void addCredential() {
+	void addCredential() {
 		System.out.print("Enter service name: ");
 		String service = scanner.nextLine().trim();
 		System.out.print("Enter username: ");
@@ -99,7 +99,7 @@ public class CredentialManager {
 		}
 	}
 
-	private void removeCredential() {
+	void removeCredential() {
 		listCredentials();
 		if (credentials.isEmpty()) return;
 
