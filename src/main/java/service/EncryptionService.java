@@ -41,11 +41,15 @@ public class EncryptionService {
 	 * @throws Exception if encryption fails
 	 */
 	public static String encrypt(String strToEncrypt) throws Exception {
+		if (strToEncrypt == null) {
+			throw new NullPointerException("Input to encrypt cannot be null");
+		}
+
 		SecretKey key = getSecretKey(SECRET_KEY, SALT);
 
 		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 
-		// Generate random 16-byte IV
+		// Generate a random 16-byte IV
 		byte[] iv = new byte[16];
 		SecureRandom sr = new SecureRandom();
 		sr.nextBytes(iv);
@@ -71,23 +75,29 @@ public class EncryptionService {
 	 * @throws Exception if decryption fails
 	 */
 	public static String decrypt(String strToDecrypt) throws Exception {
-		SecretKey key = getSecretKey(SECRET_KEY, SALT);
-		byte[] encryptedIvTextBytes = Base64.getDecoder().decode(strToDecrypt);
+		try {
+			SecretKey key = getSecretKey(SECRET_KEY, SALT);
+			byte[] encryptedIvTextBytes = Base64.getDecoder().decode(strToDecrypt);
 
-		// Extract IV from the beginning
-		byte[] iv = new byte[16];
-		System.arraycopy(encryptedIvTextBytes, 0, iv, 0, iv.length);
-		IvParameterSpec ivSpec = new IvParameterSpec(iv);
+			if (encryptedIvTextBytes.length < 17) { // 16 bytes IV and at least 1 byte ciphertext
+				throw new IllegalArgumentException("Invalid encrypted input length");
+			}
 
-		// Extract encrypted bytes after the IV
-		int encryptedSize = encryptedIvTextBytes.length - iv.length;
-		byte[] encryptedBytes = new byte[encryptedSize];
-		System.arraycopy(encryptedIvTextBytes, iv.length, encryptedBytes, 0, encryptedSize);
+			byte[] iv = new byte[16];
+			System.arraycopy(encryptedIvTextBytes, 0, iv, 0, iv.length);
+			IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
-		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-		cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
-		byte[] decrypted = cipher.doFinal(encryptedBytes);
+			byte[] encryptedBytes = new byte[encryptedIvTextBytes.length - iv.length];
+			System.arraycopy(encryptedIvTextBytes, iv.length, encryptedBytes, 0, encryptedBytes.length);
 
-		return new String(decrypted);
+			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
+			byte[] decrypted = cipher.doFinal(encryptedBytes);
+
+			return new String(decrypted);
+		} catch (Exception e) {
+			throw new Exception("Decryption failed", e);
+		}
 	}
+
 }
