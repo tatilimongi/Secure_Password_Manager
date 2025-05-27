@@ -4,8 +4,14 @@ import service.CredentialStorage;
 import service.EncryptionService;
 import utils.PasswordGenerator;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Scanner;
+import java.security.MessageDigest;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 public class App {
 
@@ -34,7 +40,8 @@ public class App {
 			System.out.println("2. Add new credential");
 			System.out.println("3. Delete a credential");
 			System.out.println("4. Copy password to clipboard");
-			System.out.println("5. Exit");
+			System.out.println("5. Check if any password has been compromised");
+			System.out.println("6. Exit");
 			System.out.print("Choose an option: ");
 
 			String option = safeReadLine(scanner);
@@ -158,6 +165,37 @@ public class App {
 				}
 
 				case "5" -> {
+					if (credentials.isEmpty()) {
+						System.out.println("No credentials to check.");
+						break;
+					}
+
+					System.out.println("Checking all passwords against data breaches...");
+					boolean found = false;
+
+					for (Credential c : credentials) {
+						try {
+							String decrypted = EncryptionService.decrypt(c.encryptedPassword());
+							String sha1 = sha1Hex(decrypted).toUpperCase();
+							String prefix = sha1.substring(0, 5);
+							String suffix = sha1.substring(5);
+
+							if (checkPwned(prefix, suffix)) {
+								System.out.println("[LEAKED] " + c.serviceName() + " | " + c.username());
+								found = true;
+							}
+						} catch (Exception e) {
+							System.err.println("Error checking password: " + e.getMessage());
+						}
+					}
+
+					if (!found) {
+						System.out.println("None of the stored passwords were found in known breaches.");
+					}
+
+				}
+
+				case "6" -> {
 					System.out.println("Exiting...");
 					return;
 				}
@@ -165,8 +203,6 @@ public class App {
 				default -> System.out.println("Invalid option.");
 			}
 		}
-
-
 	}
 
 	private static String safeReadLine(Scanner scanner) {
@@ -182,4 +218,32 @@ public class App {
 		}
 	}
 
+	private static String sha1Hex(String input) throws Exception {
+		MessageDigest md = MessageDigest.getInstance("SHA-1");
+		byte[] bytes = md.digest(input.getBytes(StandardCharsets.UTF_8));
+		StringBuilder sb = new StringBuilder();
+		for (byte b : bytes) {
+			sb.append(String.format("%02x", b));
+		}
+		return sb.toString();
+	}
+
+	private static boolean checkPwned(String prefix, String suffix) throws Exception {
+		URL url = new URL("https://api.pwnedpasswords.com/range/" + prefix);
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		conn.setRequestMethod("GET");
+		conn.setConnectTimeout(5000);
+		conn.setReadTimeout(5000);
+
+		try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+			String line;
+			while ((line = in.readLine()) != null) {
+				String[] parts = line.split(":");
+				if (parts.length > 0 && parts[0].equalsIgnoreCase(suffix)) {
+					return true; // password found in breach
+				}
+			}
+		}
+		return false;
+	}
 }
