@@ -2,21 +2,38 @@ package service;
 
 import model.Credential;
 import utils.PasswordGenerator;
-import java.util.*;
-import java.io.*;
-import java.nio.file.*;
-import java.awt.datatransfer.*;
+
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.Toolkit;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Scanner;
+
 import org.mindrot.jbcrypt.BCrypt;
 
+/**
+ * Handles user interaction for managing credentials, including
+ * listing, adding, removing, searching, decrypting, and copying passwords.
+ */
 public class CredentialManager {
-	private List<Credential> credentials;
+	private final List<Credential> credentials;
 	private final Scanner scanner = new Scanner(System.in);
 
+	/**
+	 * Initializes the credential manager with a list of credentials.
+	 *
+	 * @param credentials the credentials to manage
+	 */
 	public CredentialManager(List<Credential> credentials) {
 		this.credentials = credentials;
 	}
 
+	/**
+	 * Displays the interactive menu for managing credentials.
+	 */
 	public void showMenu() {
 		int option;
 		do {
@@ -131,8 +148,7 @@ public class CredentialManager {
 		String inputPassword = scanner.nextLine();
 
 		try {
-			List<String> lines = Files.readAllLines(Paths.get("auth.dat"));
-			String storedHash = lines.get(0);
+			String storedHash = Files.readAllLines(Paths.get("auth.dat")).getFirst();
 
 			if (!BCrypt.checkpw(inputPassword, storedHash)) {
 				System.out.println("Incorrect master password. Access denied.");
@@ -168,8 +184,7 @@ public class CredentialManager {
 		String inputPassword = scanner.nextLine();
 
 		try {
-			List<String> lines = Files.readAllLines(Paths.get("auth.dat"));
-			String storedHash = lines.get(0);
+			String storedHash = Files.readAllLines(Paths.get("auth.dat")).getFirst();
 
 			if (!BCrypt.checkpw(inputPassword, storedHash)) {
 				System.out.println("Incorrect master password. Access denied.");
