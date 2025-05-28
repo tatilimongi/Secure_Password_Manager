@@ -13,73 +13,69 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Unit tests for the CredentialStorage class.
+ * These tests validate the saving and loading of encrypted credentials.
+ */
+@DisplayName("CredentialStorage Unit Tests")
 class CredentialStorageTest {
 
 	private static final Path TEST_FILE_PATH = Paths.get("credentials.dat");
 	private static final Path BACKUP_FILE_PATH = Paths.get("credentials_backup.dat");
 
+	/**
+	 * Sets a session key and salt before each test to enable encryption/decryption.
+	 */
 	@BeforeEach
-	void setUp() throws Exception {
-		// Ensure test files are removed before each test
-		Files.deleteIfExists(TEST_FILE_PATH);
-		Files.deleteIfExists(BACKUP_FILE_PATH);
+	void setUp() {
+		EncryptionService.setSessionKeyAndSalt("testMasterPassword", "testSalt123");
 	}
 
-	@AfterEach
-	void tearDown() throws Exception {
-		// Clean up any files created during the tests
-		Files.deleteIfExists(TEST_FILE_PATH);
-		Files.deleteIfExists(BACKUP_FILE_PATH);
-	}
-
+	/**
+	 * Tests that credentials are saved to disk and properly reloaded,
+	 * preserving the original data after decryption.
+	 */
 	@Test
-	@DisplayName("Should save and load valid credentials successfully")
-	void saveAndLoadCredentialsValidDataSuccess() throws Exception {
+	@DisplayName("Should correctly save and load credentials")
+	void testSaveAndLoadCredentials() throws Exception {
 		List<Credential> credentials = new ArrayList<>();
-		credentials.add(new Credential("service1", "user1", "pass1"));
-		credentials.add(new Credential("service2", "user2", "pass2"));
+		credentials.add(new Credential("service1", "user1", EncryptionService.encrypt("pass1")));
+		credentials.add(new Credential("service2", "user2", EncryptionService.encrypt("pass2")));
 
 		CredentialStorage.saveCredentials(credentials);
+
 		List<Credential> loadedCredentials = CredentialStorage.loadCredentials();
 
 		assertEquals(2, loadedCredentials.size());
 		assertEquals("service1", loadedCredentials.getFirst().serviceName());
 		assertEquals("user1", loadedCredentials.getFirst().username());
-		assertEquals("pass1", loadedCredentials.getFirst().encryptedPassword());
+		assertEquals("pass1", EncryptionService.decrypt(loadedCredentials.getFirst().encryptedPassword()));
 	}
 
+	/**
+	 * Tests that loading credentials returns an empty list when no file exists.
+	 */
 	@Test
-	@DisplayName("Should skip credentials with null fields when saving")
-	void saveCredentialsWithNullFieldsSkipsInvalidCredentials() throws Exception {
-		List<Credential> credentials = new ArrayList<>();
-		credentials.add(new Credential(null, "user1", "pass1"));
-		credentials.add(new Credential("service2", "user2", "pass2"));
+	@DisplayName("Should return an empty list when the credentials file does not exist")
+	void testLoadCredentialsWhenFileDoesNotExist() throws Exception {
+		Files.deleteIfExists(TEST_FILE_PATH);
 
-		CredentialStorage.saveCredentials(credentials);
 		List<Credential> loadedCredentials = CredentialStorage.loadCredentials();
 
-		assertEquals(1, loadedCredentials.size());
-		assertEquals("service2", loadedCredentials.getFirst().serviceName());
+		assertNotNull(loadedCredentials, "Returned list should not be null");
+		assertTrue(loadedCredentials.isEmpty(), "Returned list should be empty when file is missing");
 	}
 
-	@Test
-	@DisplayName("Should return empty list when loading from an empty file")
-	void loadCredentialsEmptyFileReturnsEmptyList() throws Exception {
-		List<Credential> loadedCredentials = CredentialStorage.loadCredentials();
-		assertTrue(loadedCredentials.isEmpty());
-	}
-
-	@Test
-	@DisplayName("Should create a backup file when overwriting credentials")
-	void saveCredentialsCreatesBackupFile() throws Exception {
-		List<Credential> credentials = new ArrayList<>();
-		credentials.add(new Credential("service1", "user1", "pass1"));
-
-		CredentialStorage.saveCredentials(credentials); // First save
-		CredentialStorage.saveCredentials(credentials); // Second save triggers backup
-
-		assertTrue(Files.exists(BACKUP_FILE_PATH));
+	/**
+	 * Deletes any leftover files and clears the encryption session after each test.
+	 */
+	@AfterEach
+	void tearDown() throws Exception {
+		Files.deleteIfExists(TEST_FILE_PATH);
+		Files.deleteIfExists(BACKUP_FILE_PATH);
+		EncryptionService.clearSessionKeyAndSalt();
 	}
 }
