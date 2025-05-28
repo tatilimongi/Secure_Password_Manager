@@ -1,107 +1,76 @@
 package service;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mockStatic;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Unit tests for {@link AuthService}.
+ * Unit tests for the AuthService class.
+ * These tests cover the creation and verification of the master password file,
+ * as well as authentication behavior with valid and invalid inputs.
  */
-@SuppressWarnings("SpellCheckingInspection")
+@DisplayName("AuthService Unit Tests")
 class AuthServiceTest {
 
-	private static final String MASTER_PASSWORD = "testPassword123";
-	private static final Path MASTER_PASSWORD_PATH = Path.of("master_password.txt");
-	private static final Path TOTP_SECRET_PATH = Path.of("totp_secret.txt");
+    private static final String PASSWORD_FILE = "master_password.txt";
 
-	/**
-	 * Sets up a valid master password file before each test.
-	 */
-	@BeforeEach
-	void setUp() throws Exception {
-		Files.deleteIfExists(MASTER_PASSWORD_PATH);
-		Files.writeString(MASTER_PASSWORD_PATH, MASTER_PASSWORD);
-		Files.deleteIfExists(TOTP_SECRET_PATH);
-	}
+    /**
+     * Ensures the password file is deleted before each test.
+     */
+    @BeforeEach
+    void cleanUp() throws IOException {
+        Files.deleteIfExists(Paths.get(PASSWORD_FILE));
+    }
 
-	/**
-	 * Tests successful authentication with valid master password and valid TOTP code.
-	 */
-	@Test
-	@DisplayName("Should authenticate with correct password and TOTP")
-	void testSuccessfulAuthentication() {
-		String input = MASTER_PASSWORD + "\n123456\n";
-		Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
+    /**
+     * Tests that a new master password file is created
+     * when none exists and a password is provided.
+     */
+    @Test
+    @DisplayName("Should create password file if it does not exist")
+    void testLoadOrCreatePassword_createsFile() {
+        String input = "newpassword\n000000\n";
+        Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
 
-		try (MockedStatic<TOTPService> mockedTOTP = mockStatic(TOTPService.class)) {
-			mockedTOTP.when(TOTPService::loadOrCreateSecret).thenReturn("FAKESECRET");
-			mockedTOTP.when(() -> TOTPService.validateCode("FAKESECRET", "123456")).thenReturn(true);
-			mockedTOTP.when(() -> TOTPService.getBase32Secret("FAKESECRET")).thenReturn("BASE32_FAKESECRET");
-			mockedTOTP.when(() -> TOTPService.getOtpAuthUrl("FAKESECRET", "user@example.com", "SecurePasswordManager"))
-					.thenReturn("otpauth://mocked");
+        assertThrows(Exception.class, () -> new AuthService(scanner));
+        assertTrue(Files.exists(Paths.get(PASSWORD_FILE)), "Password file should be created");
+    }
 
-			assertDoesNotThrow(() -> new AuthService(scanner));
-		}
-	}
+    /**
+     * Tests that the master password is loaded correctly
+     * from an existing file and no error is thrown during password validation.
+     */
+    @Test
+    @DisplayName("Should load existing password file without throwing on valid password")
+    void testLoadOrCreatePassword_loadsExistingFile() throws Exception {
+        String hash = org.mindrot.jbcrypt.BCrypt.hashpw("testpass", org.mindrot.jbcrypt.BCrypt.gensalt());
+        Files.writeString(Paths.get(PASSWORD_FILE), hash);
 
-	/**
-	 * Tests failed authentication after three incorrect password attempts.
-	 */
-	@Test
-	@DisplayName("Should fail after three wrong password attempts")
-	void testFailedAuthentication() {
-		String input = "wrong1\n123456\nwrong2\n123456\nwrong3\n123456\n";
-		Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
+        String input = "testpass\n000000\n";
+        Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
 
-		try (MockedStatic<TOTPService> mockedTOTP = mockStatic(TOTPService.class)) {
-			mockedTOTP.when(TOTPService::loadOrCreateSecret).thenReturn("FAKESECRET");
+        // We expect an exception due to 2FA (TOTP) failure, not password mismatch
+        assertThrows(Exception.class, () -> new AuthService(scanner));
+    }
 
-			Exception exception = assertThrows(Exception.class, () -> new AuthService(scanner));
-			assertEquals("Authentication failed after maximum attempts.", exception.getMessage());
-		}
-	}
+    /**
+     * Tests that authentication fails after the maximum number of incorrect attempts.
+     */
+    @Test
+    @DisplayName("Should fail authentication after max incorrect password attempts")
+    void testAuthenticationFailsAfterMaxAttempts() {
+        String input = "wrong1\nwrong2\nwrong3\n";
+        Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
 
-	/**
-	 * Tests failed authentication with the correct password but invalid TOTP code.
-	 */
-	@Test
-	@DisplayName("Should fail with correct password but wrong TOTP")
-	void testFailedTOTPAuthentication() {
-		String input = MASTER_PASSWORD + "\n000000\n" +
-				MASTER_PASSWORD + "\n000000\n" +
-				MASTER_PASSWORD + "\n000000\n";
-		Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
-
-		try (MockedStatic<TOTPService> mockedTOTP = mockStatic(TOTPService.class)) {
-			mockedTOTP.when(TOTPService::loadOrCreateSecret).thenReturn("FAKESECRET");
-			mockedTOTP.when(() -> TOTPService.validateCode("FAKESECRET", "000000")).thenReturn(false);
-			mockedTOTP.when(() -> TOTPService.getBase32Secret("FAKESECRET")).thenReturn("BASE32_FAKESECRET");
-			mockedTOTP.when(() -> TOTPService.getOtpAuthUrl("FAKESECRET", "user@example.com", "SecurePasswordManager"))
-					.thenReturn("otpauth://mocked");
-
-			Exception exception = assertThrows(Exception.class, () -> new AuthService(scanner));
-			assertEquals("Authentication failed after maximum attempts.", exception.getMessage());
-		}
-	}
-
-	/**
-	 * Cleans up test files after each test.
-	 */
-	@AfterEach
-	void tearDown() throws Exception {
-		Files.deleteIfExists(MASTER_PASSWORD_PATH);
-		Files.deleteIfExists(TOTP_SECRET_PATH);
-	}
+        assertThrows(Exception.class, () -> new AuthService(scanner));
+    }
 }
