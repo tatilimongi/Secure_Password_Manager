@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
  * AuthService handles user authentication and two-factor verification using TOTP.
@@ -25,7 +26,7 @@ public class AuthService {
 	 */
 	public AuthService(Scanner scanner) throws Exception {
 		this.scanner = scanner;
-		String masterPassword = loadOrCreatePassword();
+		String masterPasswordHash = loadOrCreatePassword();
 		String totpSecret = TOTPService.loadOrCreateSecret();
 
 		System.out.println("\nTwo-Factor Authentication (TOTP) is enabled.");
@@ -34,11 +35,12 @@ public class AuthService {
 		System.out.println("Alternatively, scan a QR code using this URL:");
 		System.out.println(TOTPService.getOtpAuthUrl(totpSecret, "user@example.com", "SecurePasswordManager"));
 
+		String sessionPassword = null;
 		for (int attempts = 1; attempts <= MAX_ATTEMPTS; attempts++) {
 			System.out.print("\nEnter master password: ");
 			String inputPassword = scanner.nextLine();
 
-			if (!inputPassword.equals(masterPassword)) {
+			if (!org.mindrot.jbcrypt.BCrypt.checkpw(inputPassword, masterPasswordHash)) {
 				System.out.println("Incorrect password.");
 				continue;
 			}
@@ -48,13 +50,20 @@ public class AuthService {
 
 			if (TOTPService.validateCode(totpSecret, inputCode)) {
 				System.out.println("Authentication successful.");
-				return;
+				sessionPassword = inputPassword;
+				break;
 			} else {
 				System.out.println("Invalid TOTP code.");
 			}
 		}
 
-		throw new Exception("Authentication failed after maximum attempts.");
+		if (sessionPassword == null) {
+			throw new Exception("Authentication failed after maximum attempts.");
+		}
+
+		// Set up encryption session key and salt
+		String salt = service.EncryptionService.getOrCreatePersistentSalt();
+		service.EncryptionService.setSessionKeyAndSalt(sessionPassword, salt);
 	}
 
 	/**
@@ -72,9 +81,9 @@ public class AuthService {
 		System.out.println("No master password found. Please create one now.");
 		System.out.print("New password: ");
 		String newPassword = scanner.nextLine();
-
-		Files.writeString(path, newPassword);
+		String hash = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+		Files.writeString(path, hash);
 		System.out.println("Master password saved.");
-		return newPassword;
+		return hash;
 	}
 }
