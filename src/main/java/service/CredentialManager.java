@@ -2,17 +2,14 @@ package service;
 
 import model.Credential;
 import utils.PasswordGenerator;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.Toolkit;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
-
-import org.mindrot.jbcrypt.BCrypt;
 
 /**
  * Handles user interaction for managing credentials, including
@@ -35,30 +32,30 @@ public class CredentialManager {
 	 * Displays the interactive menu for managing credentials.
 	 */
 	public void showMenu() {
-		int option;
-		do {
-			System.out.println("\n===== Credential Manager =====");
-			System.out.println("1. List credentials");
-			System.out.println("2. Add credential");
-			System.out.println("3. Remove credential");
-			System.out.println("4. Search by service");
-			System.out.println("5. Show decrypted password");
-			System.out.println("6. Copy decrypted password to clipboard");
-			System.out.println("7. Exit");
+		while (true) {
+			System.out.println("\n=== Credential Manager ===");
+			System.out.println("1. List all credentials");
+			System.out.println("2. Add new credential");
+			System.out.println("3. Delete a credential");
+			System.out.println("4. Copy password to clipboard");
+			System.out.println("5. Check if any password has been compromised");
+			System.out.println("6. Exit");
 			System.out.print("Choose an option: ");
-			option = getIntInput();
+			String option = scanner.nextLine();
 
 			switch (option) {
-				case 1 -> listCredentials();
-				case 2 -> addCredential();
-				case 3 -> removeCredential();
-				case 4 -> searchCredential();
-				case 5 -> showDecryptedPassword();
-				case 6 -> copyPasswordToClipboard();
-				case 7 -> saveAndExit();
+				case "1" -> listCredentials();
+				case "2" -> addCredential();
+				case "3" -> removeCredential();
+				case "4" -> copyPasswordToClipboard();
+				case "5" -> checkCompromisedPasswords();
+				case "6" -> {
+					saveAndExit();
+					return;
+				}
 				default -> System.out.println("Invalid option. Try again.");
 			}
-		} while (option != 7);
+		}
 	}
 
 	private void listCredentials() {
@@ -69,8 +66,8 @@ public class CredentialManager {
 		System.out.println("Stored Credentials:");
 		for (int i = 0; i < credentials.size(); i++) {
 			Credential c = credentials.get(i);
-			System.out.printf("%d. Service: %s | Username: %s | Password: %s%n",
-					i + 1, c.serviceName(), c.username(), c.encryptedPassword());
+			System.out.printf("%d. Service: %s | Username: %s%n",
+				i + 1, c.serviceName(), c.username());
 		}
 	}
 
@@ -84,7 +81,7 @@ public class CredentialManager {
 		String password;
 		if (choice.equals("y")) {
 			password = PasswordGenerator.generate(16, true, true, true, true);
-			System.out.println("Generated password: " + password);
+			System.out.println("Generated password.");
 		} else {
 			System.out.print("Enter password: ");
 			password = scanner.nextLine().trim();
@@ -113,58 +110,6 @@ public class CredentialManager {
 		}
 	}
 
-	private void searchCredential() {
-		System.out.print("Search for service: ");
-		String query = scanner.nextLine().trim().toLowerCase();
-		boolean found = false;
-		for (Credential c : credentials) {
-			if (c.serviceName().toLowerCase().contains(query)) {
-				System.out.printf("Service: %s | Username: %s | Password: %s%n",
-						c.serviceName(), c.username(), c.encryptedPassword());
-				found = true;
-			}
-		}
-		if (!found) {
-			System.out.println("No match found.");
-		}
-	}
-
-	private void showDecryptedPassword() {
-		if (credentials.isEmpty()) {
-			System.out.println("No credentials stored.");
-			return;
-		}
-
-		listCredentials();
-		System.out.print("Enter number to decrypt: ");
-		int index = getIntInput() - 1;
-
-		if (index < 0 || index >= credentials.size()) {
-			System.out.println("Invalid index.");
-			return;
-		}
-
-		System.out.print("Re-enter master password to confirm: ");
-		String inputPassword = scanner.nextLine();
-
-		try {
-			String storedHash = Files.readAllLines(Paths.get("auth.dat")).getFirst();
-
-			if (!BCrypt.checkpw(inputPassword, storedHash)) {
-				System.out.println("Incorrect master password. Access denied.");
-				return;
-			}
-
-			Credential selected = credentials.get(index);
-			String decrypted = EncryptionService.decrypt(selected.encryptedPassword());
-			System.out.printf("Decrypted password for %s: %s%n", selected.serviceName(), decrypted);
-		} catch (IOException e) {
-			System.err.println("Error reading auth.dat: " + e.getMessage());
-		} catch (Exception e) {
-			System.err.println("Error decrypting password: " + e.getMessage());
-		}
-	}
-
 	private void copyPasswordToClipboard() {
 		if (credentials.isEmpty()) {
 			System.out.println("No credentials stored.");
@@ -184,7 +129,12 @@ public class CredentialManager {
 		String inputPassword = scanner.nextLine();
 
 		try {
-			String storedHash = Files.readAllLines(Paths.get("auth.dat")).getFirst();
+			java.nio.file.Path passwordPath = java.nio.file.Paths.get("master_password.txt");
+			if (!java.nio.file.Files.exists(passwordPath)) {
+				System.out.println("master_password.txt file not found. Please set up your master password again.");
+				return;
+			}
+			String storedHash = java.nio.file.Files.readAllLines(passwordPath).getFirst();
 
 			if (!BCrypt.checkpw(inputPassword, storedHash)) {
 				System.out.println("Incorrect master password. Access denied.");
@@ -196,7 +146,7 @@ public class CredentialManager {
 			copyToClipboard(decrypted);
 			System.out.printf("Password for %s copied to clipboard.%n", selected.serviceName());
 		} catch (IOException e) {
-			System.err.println("Error reading auth.dat: " + e.getMessage());
+			System.err.println("Error reading master_password.txt: " + e.getMessage());
 		} catch (Exception e) {
 			System.err.println("Error decrypting password: " + e.getMessage());
 		}
@@ -209,6 +159,31 @@ public class CredentialManager {
 			clipboard.setContents(selection, null);
 		} catch (Exception e) {
 			System.err.println("Clipboard operation not supported: " + e.getMessage());
+		}
+	}
+
+	private void checkCompromisedPasswords() {
+		if (credentials.isEmpty()) {
+			System.out.println("No credentials stored.");
+			return;
+		}
+		System.out.println("Checking all stored passwords for breaches...");
+		boolean anyCompromised = false;
+		for (Credential c : credentials) {
+			try {
+				String decrypted = EncryptionService.decrypt(c.encryptedPassword());
+				int count = PasswordBreachChecker.checkPassword(decrypted);
+				if (count > 0) {
+					System.out.printf("WARNING: Password for service '%s' (username: %s) was found %d times in breaches!%n",
+							c.serviceName(), c.username(), count);
+					anyCompromised = true;
+				}
+			} catch (Exception e) {
+				System.err.println("Error checking password for service '" + c.serviceName() + "': " + e.getMessage());
+			}
+		}
+		if (!anyCompromised) {
+			System.out.println("No compromised passwords found in your credentials.");
 		}
 	}
 
