@@ -1,15 +1,36 @@
+<div align="center">
+
 # Secure Password Manager
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-22-blue.svg)](https://www.oracle.com/java/technologies/javase/22-relnote-issues.html)
 [![Build with Maven](https://img.shields.io/badge/build-maven-brightgreen.svg)](https://maven.apache.org/)
-[![Tests](https://github.com/tatilimongi/Secure_Password_Manager/actions/workflows/maven.yml/badge.svg)](https://github.com/tatilimongi/Secure_Password_Manager/actions)
+![Maven Central](https://img.shields.io/badge/Maven-dependencies-blue?logo=apachemaven)
+[![Dependencies](https://img.shields.io/librariesio/github/tatilimongi/Secure_Password_Manager)](https://libraries.io/github/tatilimongi/Secure_Password_Manager)
+[![Test](https://github.com/tatilimongi/Secure_Password_Manager/actions/workflows/test.yml/badge.svg)](https://github.com/tatilimongi/Secure_Password_Manager/actions/workflows/test.yml)
+
 [![Last Commit](https://img.shields.io/github/last-commit/tatilimongi/Secure_Password_Manager.svg)](https://github.com/tatilimongi/Secure_Password_Manager/commits/main)
+[![Commit Activity](https://img.shields.io/github/commit-activity/m/tatilimongi/Secure_Password_Manager.svg)](https://github.com/tatilimongi/Secure_Password_Manager/graphs/commit-activity)
 [![Issues](https://img.shields.io/github/issues/tatilimongi/Secure_Password_Manager.svg)](https://github.com/tatilimongi/Secure_Password_Manager/issues)
-[![Stars](https://img.shields.io/github/stars/tatilimongi/Secure_Password_Manager.svg)](https://github.com/tatilimongi/Secure_Password_Manager/stargazers)
-[![Forks](https://img.shields.io/github/forks/tatilimongi/Secure_Password_Manager.svg)](https://github.com/tatilimongi/Secure_Password_Manager/network)
+[![Pull Requests](https://img.shields.io/github/issues-pr/tatilimongi/Secure_Password_Manager.svg)](https://github.com/tatilimongi/Secure_Password_Manager/pulls)
+
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/1909c5e91ece446fbed19ae45659dae4)](https://app.codacy.com/gh/tatilimongi/Secure_Password_Manager/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![CodeQL Advanced](https://github.com/tatilimongi/Secure_Password_Manager/actions/workflows/codeql.yml/badge.svg)](https://github.com/tatilimongi/Secure_Password_Manager/actions/workflows/codeql.yml)
+<img alt="Dependabot enabled" src="https://img.shields.io/badge/Dependabot-enabled-brightgreen?logo=dependabot" />
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=tatilimongi_Secure_Password_Manager&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=tatilimongi_Secure_Password_Manager)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=tatilimongi_Secure_Password_Manager&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=tatilimongi_Secure_Password_Manager)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=tatilimongi_Secure_Password_Manager&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=tatilimongi_Secure_Password_Manager)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=tatilimongi_Secure_Password_Manager&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=tatilimongi_Secure_Password_Manager)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=tatilimongi_Secure_Password_Manager&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=tatilimongi_Secure_Password_Manager)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=tatilimongi_Secure_Password_Manager&metric=bugs)](https://sonarcloud.io/summary/new_code?id=tatilimongi_Secure_Password_Manager)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=tatilimongi_Secure_Password_Manager&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=tatilimongi_Secure_Password_Manager)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=tatilimongi_Secure_Password_Manager&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=tatilimongi_Secure_Password_Manager)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=tatilimongi_Secure_Password_Manager&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=tatilimongi_Secure_Password_Manager)
 
 A secure, command-line password manager written in Java. It allows you to safely store, generate, and manage your credentials with strong encryption and modern security features.
+
+</div>
 
 ## Features
 
