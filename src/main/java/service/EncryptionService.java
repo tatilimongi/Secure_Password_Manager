@@ -10,10 +10,41 @@ import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.Base64;
 
+/**
+ * EncryptionService provides secure encryption and decryption of sensitive data using AES-GCM.
+ * The encryption key is derived from the user's master password and a persistent salt using PBKDF2.
+ * The key and salt are only kept in memory for the session and cleared on JVM shutdown.
+ * Usage:
+ * - After authentication, call setSessionKeyAndSalt(masterPassword, salt) to initialize the session key.
+ * - Use encrypt() and decrypt() for secure data operations.
+ * - The persistent salt is managed in encryption_salt.txt.
+ */
 public class EncryptionService {
 
-	private static final String SECRET_KEY = "MyVerySecurePassword123!";
-	private static final String SALT = "12345678";
+	private static String sessionKey = null;
+	private static String sessionSalt = null;
+
+	public static void setSessionKeyAndSalt(String key, String salt) {
+		sessionKey = key;
+		sessionSalt = salt;
+	}
+
+	private static SecretKey getSessionSecretKey() throws Exception {
+		if (sessionKey == null || sessionSalt == null) {
+			throw new IllegalStateException("Session key and salt must be set before encryption/decryption.");
+		}
+		return getSecretKey(sessionKey, sessionSalt);
+	}
+
+	public static void clearSessionKeyAndSalt() {
+		sessionKey = null;
+		sessionSalt = null;
+	}
+
+	// Call this method at JVM shutdown to clear sensitive data from memory
+	static {
+		Runtime.getRuntime().addShutdownHook(new Thread(EncryptionService::clearSessionKeyAndSalt));
+	}
 
 	/**
 	 * Generates a SecretKey from a password and salt using PBKDF2 with HMAC SHA-256.
@@ -44,26 +75,17 @@ public class EncryptionService {
 		if (strToEncrypt == null) {
 			throw new NullPointerException("Input to encrypt cannot be null");
 		}
-
-		SecretKey key = getSecretKey(SECRET_KEY, SALT);
-
+		SecretKey key = getSessionSecretKey();
 		Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-
-		// Generate a random 12-byte IV (recommended size for GCM)
 		byte[] iv = new byte[12];
 		SecureRandom sr = new SecureRandom();
 		sr.nextBytes(iv);
-		GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv); // 128-bit authentication tag
-
+		GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
 		cipher.init(Cipher.ENCRYPT_MODE, key, gcmSpec);
 		byte[] encrypted = cipher.doFinal(strToEncrypt.getBytes());
-
-		// Combine IV and encrypted bytes
 		byte[] encryptedWithIv = new byte[iv.length + encrypted.length];
 		System.arraycopy(iv, 0, encryptedWithIv, 0, iv.length);
 		System.arraycopy(encrypted, 0, encryptedWithIv, iv.length, encrypted.length);
-
-		// Return Base64 encoded IV + encrypted data
 		return Base64.getEncoder().encodeToString(encryptedWithIv);
 	}
 
@@ -76,28 +98,37 @@ public class EncryptionService {
 	 */
 	public static String decrypt(String strToDecrypt) throws Exception {
 		try {
-			SecretKey key = getSecretKey(SECRET_KEY, SALT);
+			SecretKey key = getSessionSecretKey();
 			byte[] encryptedIvTextBytes = Base64.getDecoder().decode(strToDecrypt);
-
-			if (encryptedIvTextBytes.length < 13) { // 12 byte IV and at least 1 byte ciphertext
+			if (encryptedIvTextBytes.length < 13) {
 				throw new IllegalArgumentException("Invalid encrypted input length");
 			}
-
 			byte[] iv = new byte[12];
 			System.arraycopy(encryptedIvTextBytes, 0, iv, 0, iv.length);
-
 			byte[] encryptedBytes = new byte[encryptedIvTextBytes.length - iv.length];
 			System.arraycopy(encryptedIvTextBytes, iv.length, encryptedBytes, 0, encryptedBytes.length);
-
 			Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
 			GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
 			cipher.init(Cipher.DECRYPT_MODE, key, gcmSpec);
 			byte[] decrypted = cipher.doFinal(encryptedBytes);
-
 			return new String(decrypted);
 		} catch (Exception e) {
 			throw new Exception("Decryption failed", e);
 		}
+	}
+
+	// Utility to generate or load a persistent salt for PBKDF2
+	public static String getOrCreatePersistentSalt() throws Exception {
+		java.nio.file.Path saltPath = java.nio.file.Paths.get("encryption_salt.txt");
+		if (java.nio.file.Files.exists(saltPath)) {
+			return java.nio.file.Files.readString(saltPath).trim();
+		}
+		// Generate a new random salt (16 bytes, base64 encoded)
+		byte[] saltBytes = new byte[16];
+		new SecureRandom().nextBytes(saltBytes);
+		String salt = Base64.getEncoder().encodeToString(saltBytes);
+		java.nio.file.Files.writeString(saltPath, salt);
+		return salt;
 	}
 
 }
