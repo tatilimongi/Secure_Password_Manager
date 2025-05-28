@@ -36,7 +36,7 @@ class CredentialStorageTest {
 
 	@Test
 	@DisplayName("Should save and load valid credentials successfully")
-	void saveAndLoadCredentials_ValidData_Success() throws Exception {
+	void saveAndLoadCredentialsValidDataSuccess() throws Exception {
 		List<Credential> credentials = new ArrayList<>();
 		credentials.add(new Credential("service1", "user1", "pass1"));
 		credentials.add(new Credential("service2", "user2", "pass2"));
@@ -52,7 +52,7 @@ class CredentialStorageTest {
 
 	@Test
 	@DisplayName("Should skip credentials with null fields when saving")
-	void saveCredentials_WithNullFields_SkipsInvalidCredentials() throws Exception {
+	void saveCredentialsWithNullFieldsSkipsInvalidCredentials() throws Exception {
 		List<Credential> credentials = new ArrayList<>();
 		credentials.add(new Credential(null, "user1", "pass1"));
 		credentials.add(new Credential("service2", "user2", "pass2"));
@@ -66,14 +66,14 @@ class CredentialStorageTest {
 
 	@Test
 	@DisplayName("Should return empty list when loading from an empty file")
-	void loadCredentials_EmptyFile_ReturnsEmptyList() throws Exception {
+	void loadCredentialsEmptyFileReturnsEmptyList() throws Exception {
 		List<Credential> loadedCredentials = CredentialStorage.loadCredentials();
 		assertTrue(loadedCredentials.isEmpty());
 	}
 
 	@Test
 	@DisplayName("Should create a backup file when overwriting credentials")
-	void saveCredentials_CreatesBackupFile() throws Exception {
+	void saveCredentialsCreatesBackupFile() throws Exception {
 		List<Credential> credentials = new ArrayList<>();
 		credentials.add(new Credential("service1", "user1", "pass1"));
 

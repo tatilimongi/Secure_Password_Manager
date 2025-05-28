@@ -22,7 +22,7 @@ class CredentialManagerTest {
 
 	@Test
 	@DisplayName("Should add a credential to the list")
-	void testAddCredential_AddsToList() {
+	void testAddCredentialAddsToList() {
 		int initialSize = credentials.size();
 		Credential testCred = new Credential("TestService", "testUser", "encryptedPass");
 		credentials.add(testCred);
@@ -33,7 +33,7 @@ class CredentialManagerTest {
 
 	@Test
 	@DisplayName("Should remove a credential from the list")
-	void testRemoveCredential_RemovesFromList() {
+	void testRemoveCredentialRemovesFromList() {
 		Credential testCred = new Credential("TestService", "testUser", "encryptedPass");
 		credentials.add(testCred);
 		int initialSize = credentials.size();
@@ -46,14 +46,14 @@ class CredentialManagerTest {
 
 	@Test
 	@DisplayName("Should initialize with an empty list")
-	void testConstructor_InitializesWithEmptyList() {
+	void testConstructorInitializesWithEmptyList() {
 		assertNotNull(credentials);
 		assertTrue(credentials.isEmpty());
 	}
 
 	@Test
 	@DisplayName("Should initialize with a provided list containing credentials")
-	void testConstructor_InitializesWithProvidedList() {
+	void testConstructorInitializesWithProvidedList() {
 		List<Credential> testList = new ArrayList<>();
 		testList.add(new Credential("TestService", "testUser", "encryptedPass"));
 
