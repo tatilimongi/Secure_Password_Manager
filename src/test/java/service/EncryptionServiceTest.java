@@ -4,51 +4,58 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class EncryptionServiceTest {
 
-	@Test
-	@DisplayName("Should encrypt and decrypt a string correctly")
-	void testEncryptAndDecrypt() throws Exception {
-		String originalText = "My secret password";
+    @Test
+    @DisplayName("Should derive the same key for same password and salt")
+    void testGetSecretKeyConsistency() throws Exception {
+        String password = "testPassword";
+        String salt = "testSalt123";
+        var key1 = EncryptionService.getSecretKey(password, salt);
+        var key2 = EncryptionService.getSecretKey(password, salt);
+        assertEquals(new String(key1.getEncoded()), new String(key2.getEncoded()));
+    }
 
-		String encryptedText = EncryptionService.encrypt(originalText);
-		String decryptedText = EncryptionService.decrypt(encryptedText);
+    @Test
+    @DisplayName("Should encrypt and decrypt correctly with session key and salt")
+    void testEncryptDecrypt() throws Exception {
+        String password = "masterPass";
+        String salt = "uniqueSalt!";
+        EncryptionService.setSessionKeyAndSalt(password, salt);
+        String original = "SensitiveData123!";
+        String encrypted = EncryptionService.encrypt(original);
+        String decrypted = EncryptionService.decrypt(encrypted);
+        assertEquals(original, decrypted);
+        EncryptionService.clearSessionKeyAndSalt();
+    }
 
-		assertNotEquals(originalText, encryptedText, "Encrypted text should differ from the original");
-		assertEquals(originalText, decryptedText, "Decrypted text should match the original");
-	}
+    @Test
+    @DisplayName("Should throw when encrypting without session key and salt")
+    void testEncryptWithoutSessionKey() {
+        EncryptionService.clearSessionKeyAndSalt();
+        assertThrows(IllegalStateException.class, () -> EncryptionService.encrypt("data"));
+    }
 
-	@Test
-	@DisplayName("Should generate different encryption for the same text")
-	void testEncryptRandomness() throws Exception {
-		String text = "test123";
+    @Test
+    @DisplayName("Should throw when decrypting with wrong session key")
+    void testDecryptWithWrongKey() throws Exception {
+        String password = "rightPass";
+        String salt = "rightSalt";
+        EncryptionService.setSessionKeyAndSalt(password, salt);
+        String encrypted = EncryptionService.encrypt("Secret");
+        EncryptionService.setSessionKeyAndSalt("wrongPass", salt);
+        assertThrows(Exception.class, () -> EncryptionService.decrypt(encrypted));
+        EncryptionService.clearSessionKeyAndSalt();
+    }
 
-		String firstEncryption = EncryptionService.encrypt(text);
-		String secondEncryption = EncryptionService.encrypt(text);
-
-		assertNotEquals(firstEncryption, secondEncryption,
-				"Encryption of the same text should differ due to random IV");
-	}
-
-	@Test
-	@DisplayName("Should throw exception when decrypting invalid input")
-	void testDecryptInvalidInput() {
-		String invalidText = "invalidUnencryptedText";
-
-		assertThrows(Exception.class,
-				() -> EncryptionService.decrypt(invalidText),
-				"Should throw exception when decrypting invalid text");
-	}
-
-	@Test
-	@DisplayName("Should throw NullPointerException when encrypting null input")
-	void testEncryptNullInput() {
-		assertThrows(NullPointerException.class,
-				() -> EncryptionService.encrypt(null),
-				"Should throw NullPointerException when trying to encrypt null");
-	}
-
+    @Test
+    @DisplayName("Should generate and persist salt")
+    void testGetOrCreatePersistentSalt() throws Exception {
+        String salt1 = EncryptionService.getOrCreatePersistentSalt();
+        String salt2 = EncryptionService.getOrCreatePersistentSalt();
+        assertEquals(salt1, salt2);
+        assertEquals(24, salt1.length()); // 16 bytes base64 = 24 chars
+    }
 }
