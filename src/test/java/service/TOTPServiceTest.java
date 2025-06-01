@@ -13,6 +13,7 @@ import java.util.Base64;
  * Unit tests for the {@link TOTPService} class.
  * These tests cover secret generation, encoding, URL creation, and TOTP code validation.
  */
+@DisplayName("Tests for TOTPService")
 public class TOTPServiceTest {
 
     private static final String TEST_ACCOUNT = "test@example.com";
