@@ -79,54 +79,109 @@ public class CredentialManager {
 	 * Adds a new credential, with an option to generate a secure password.
 	 */
 	void addCredential() {
-		String service;
-		String username;
-		String choice;
+    String service;
+    String username;
+    String choice;
 
-		try {
-			System.out.print("Enter service name: ");
-			service = InputSanitizer.sanitize(scanner.nextLine(), 50, false);
+    try {
+        System.out.print("Enter service name: ");
+        service = InputSanitizer.sanitize(scanner.nextLine(), 50, false);
 
-			System.out.print("Enter username: ");
-			username = InputSanitizer.sanitize(scanner.nextLine(), 50, false);
+        System.out.print("Enter username: ");
+        username = InputSanitizer.sanitize(scanner.nextLine(), 50, false);
 
-			System.out.print("Generate strong password? (y/n): ");
-			choice = InputSanitizer.sanitize(scanner.nextLine().toLowerCase(), 1, false);
+        System.out.print("Generate strong password? (y/n): ");
+        choice = InputSanitizer.sanitize(scanner.nextLine().toLowerCase(), 1, false);
 
-			// Input validation for user choice
-			while (!choice.equals("y") && !choice.equals("n")) {
-				System.out.print("Invalid input. Please enter 'y' for yes or 'n' for no: ");
-				choice = InputSanitizer.sanitize(scanner.nextLine().toLowerCase(), 1, false);
-			}
-		} catch (IllegalArgumentException ex) {
-			System.out.println("Invalid input. " + ex.getMessage());
-			return;
-		}
+        // Input validation for user choice
+        while (!choice.equals("y") && !choice.equals("n")) {
+            System.out.print("Invalid input. Please enter 'y' for yes or 'n' for no: ");
+            choice = InputSanitizer.sanitize(scanner.nextLine().toLowerCase(), 1, false);
+        }
+    } catch (IllegalArgumentException ex) {
+        System.out.println("Invalid input. " + ex.getMessage());
+        return;
+    }
 
-		// Define password based on user choice
-		String password;
-		if (choice.equals("y")) {
-			password = PasswordGenerator.generate(16, true, true, true, true);
-			System.out.println("Generated password.");
-		} else {
-			System.out.print("Enter password: ");
-			try {
-				password = InputSanitizer.sanitize(scanner.nextLine(), 64, false);
-			} catch (IllegalArgumentException ex) {
-				System.out.println("Invalid password. " + ex.getMessage());
-				return;
-			}
-		}
+    // Define password based on user choice
+    String password;
+    if (choice.equals("y")) {
+        // Allow the user to define the password length and characteristics
+        int passwordLength = askPasswordLength();
+        boolean includeUppercase = askIncludeOption("Include uppercase letters?");
+        boolean includeLowercase = askIncludeOption("Include lowercase letters?");
+        boolean includeNumbers = askIncludeOption("Include numbers?");
+        boolean includeSymbols = askIncludeOption("Include symbols?");
 
-		// Encrypt password and store new credential
-		try {
-			String encryptedPassword = EncryptionService.encrypt(password);
-			credentials.add(new Credential(service, username, encryptedPassword));
-			System.out.println("Credential added successfully.");
-		} catch (Exception e) {
-			System.err.println("Error encrypting password: " + e.getMessage());
-		}
-	}
+        // Validate if at least one option is selected
+        if (!includeUppercase && !includeLowercase && !includeNumbers && !includeSymbols) {
+            System.out.println("Error: At least one character type must be selected.");
+            return;
+        }
+
+        password = PasswordGenerator.generate(passwordLength, includeUppercase, includeLowercase, includeNumbers, includeSymbols);
+
+    } else {
+        System.out.print("Enter password: ");
+        try {
+            password = InputSanitizer.sanitize(scanner.nextLine(), 64, false);
+        } catch (IllegalArgumentException ex) {
+            System.out.println("Invalid password. " + ex.getMessage());
+            return;
+        }
+    }
+
+    // Encrypt password and store new credential
+    try {
+        String encryptedPassword = EncryptionService.encrypt(password);
+        credentials.add(new Credential(service, username, encryptedPassword));
+        System.out.println("Credential added successfully.");
+    } catch (Exception e) {
+        System.err.println("Error encrypting password: " + e.getMessage());
+    }
+}
+
+/**
+ * Asks the user for the password length and validates the input.
+ *
+ * @return The password length.
+ */
+private int askPasswordLength() {
+    int length = 0;
+    while (length <= 0) {
+        try {
+            System.out.print("Enter password length (minimum 8): ");
+            length = Integer.parseInt(scanner.nextLine());
+            if (length < 8) {
+                System.out.println("Password length must be at least 8 characters.");
+                length = 0;
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input. Please enter a valid number.");
+        }
+    }
+    return length;
+}
+
+/**
+ * Asks the user whether to include a specific character set in the password.
+ *
+ * @param message The message to display to the user.
+ * @return True if the user wants to include the character set, otherwise false.
+ */
+private boolean askIncludeOption(String message) {
+    while (true) {
+        System.out.print(message + " (y/n): ");
+        String input = scanner.nextLine().toLowerCase();
+        if (input.equals("y")) {
+            return true;
+        } else if (input.equals("n")) {
+            return false;
+        } else {
+            System.out.println("Invalid input. Please enter 'y' for yes or 'n' for no.");
+        }
+    }
+}
 
 	/**
 	 * Removes a credential from the list based on user input.
