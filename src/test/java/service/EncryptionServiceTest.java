@@ -1,13 +1,23 @@
 package service;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * Unit tests for the EncryptionService utility.
+ * Focuses on encryption, decryption, and session key management functionalities.
+ */
+@DisplayName("Unit Tests for App Class Functionality")
 class EncryptionServiceTest {
 
+    /**
+     * Tests consistency of secret key derivation for the same password and salt.
+     *
+     * @throws Exception if an error occurs during key derivation
+     */
     @Test
     @DisplayName("Should derive the same key for same password and salt")
     void testGetSecretKeyConsistency() throws Exception {
@@ -18,6 +28,11 @@ class EncryptionServiceTest {
         assertEquals(new String(key1.getEncoded()), new String(key2.getEncoded()));
     }
 
+    /**
+     * Tests encryption and decryption using a session key and salt.
+     *
+     * @throws Exception if an error occurs during encryption/decryption
+     */
     @Test
     @DisplayName("Should encrypt and decrypt correctly with session key and salt")
     void testEncryptDecrypt() throws Exception {
@@ -31,6 +46,10 @@ class EncryptionServiceTest {
         EncryptionService.clearSessionKeyAndSalt();
     }
 
+    /**
+     * Ensures that an exception is thrown when trying to encrypt data
+     * without setting a session key and salt.
+     */
     @Test
     @DisplayName("Should throw when encrypting without session key and salt")
     void testEncryptWithoutSessionKey() {
@@ -38,6 +57,11 @@ class EncryptionServiceTest {
         assertThrows(IllegalStateException.class, () -> EncryptionService.encrypt("data"));
     }
 
+    /**
+     * Verifies that decryption fails when an incorrect session key is used.
+     *
+     * @throws Exception if an unexpected error occurs
+     */
     @Test
     @DisplayName("Should throw when decrypting with wrong session key")
     void testDecryptWithWrongKey() throws Exception {
@@ -50,6 +74,11 @@ class EncryptionServiceTest {
         EncryptionService.clearSessionKeyAndSalt();
     }
 
+    /**
+     * Tests persistent salt generation and ensures consistency across calls.
+     *
+     * @throws Exception if an error occurs during salt generation
+     */
     @Test
     @DisplayName("Should generate and persist salt")
     void testGetOrCreatePersistentSalt() throws Exception {
