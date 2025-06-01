@@ -7,11 +7,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the {@link Credential} record.
- * These tests validate proper creation, behavior of {@code toString()},
- * equality and hashCode consistency.
+ * <p>
+ * These tests validate the proper creation and usage of {@link Credential},
+ * including its {@code toString()}, equality logic, and {@code hashCode} behavior.
  */
+@DisplayName("CredentialTest Suite") // Display the name for the test class
 class CredentialTest {
 
+    /**
+     * Tests the correct creation of a {@link Credential} object with valid field values.
+     */
     @Test
     @DisplayName("Should create Credential with correct field values")
     void testCredentialCreation() {
@@ -23,6 +28,9 @@ class CredentialTest {
         assertEquals("encryptedPass123", credential.encryptedPassword());
     }
 
+    /**
+     * Verifies the {@code toString()} method returns a correctly formatted string representation.
+     */
     @Test
     @DisplayName("Should return expected string from toString()")
     void testToString() {
@@ -32,6 +40,10 @@ class CredentialTest {
         assertEquals(expected, credential.toString());
     }
 
+    /**
+     * Validates equality between two {@link Credential} objects with the same fields
+     * and ensures objects with differing fields are not considered equal.
+     */
     @Test
     @DisplayName("Should consider credentials equal when fields match")
     void testEquality() {
@@ -43,6 +55,10 @@ class CredentialTest {
         assertNotEquals(credential1, differentCredential);
     }
 
+    /**
+     * Confirms that the {@code hashCode()} method produces consistent results for {@link Credential}
+     * objects with the same field values.
+     */
     @Test
     @DisplayName("Should return same hashCode for equal credentials")
     void testHashCode() {
