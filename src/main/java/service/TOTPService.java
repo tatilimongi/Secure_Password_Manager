@@ -16,7 +16,7 @@ public class TOTPService {
 	private static final long TIME_STEP_SECONDS = 30;
 	private static final int CODE_DIGITS = 6;
 	private static final String HMAC_ALGORITHM = "HmacSHA1";
-	private static final String SECRET_FILE = "totp_secret.txt";
+	private static final String SECRET_FILE = "totp_secret.dat"; // Alterado para .dat
 
 	/**
 	 * Generates a new Base64-encoded secret key (internal use).
@@ -54,22 +54,31 @@ public class TOTPService {
 	 * Validates a TOTP code entered by the user.
 	 */
 	public static boolean validateCode(String base64Secret, String inputCode) {
-		if (inputCode == null || inputCode.length() != CODE_DIGITS || !inputCode.matches("\\d+")) {
-			return false;
-		}
+	    if (inputCode == null || inputCode.length() != CODE_DIGITS) {
+	        System.out.println("Invalid TOTP code. Your code must contain " + CODE_DIGITS + " digits.");
+	        return false;
+	    }
 
-		try {
-			long currentWindow = Instant.now().getEpochSecond() / TIME_STEP_SECONDS;
-			for (long offset = -1; offset <= 1; offset++) {
-				String expectedCode = generateCodeAtTime(base64Secret, currentWindow + offset);
-				if (expectedCode.equals(inputCode)) {
-					return true;
-				}
-			}
-		} catch (Exception e) {
-			System.err.println("TOTP validation failed: " + e.getMessage());
-		}
-		return false;
+	    if (!inputCode.matches("\\d{" + CODE_DIGITS + "}")) {
+	        System.out.println("Invalid TOTP code. TOTP code must only contain numeric digits");
+	        return false;
+	    }
+
+	    try {
+	        long currentWindow = Instant.now().getEpochSecond() / TIME_STEP_SECONDS;
+	        for (long offset = -1; offset <= 1; offset++) {
+	            String expectedCode = generateCodeAtTime(base64Secret, currentWindow + offset);
+	            if (expectedCode.equals(inputCode)) {
+	                return true;
+	            }
+	        }
+	    } catch (Exception e) {
+	        System.err.println("TOTP validation failed: " + e.getMessage());
+	        return false;
+	    }
+
+	    System.out.println("Please try again.");
+	    return false;
 	}
 
 	private static String generateCodeAtTime(String base64Secret, long timeWindow) throws Exception {
@@ -111,7 +120,7 @@ public class TOTPService {
 				System.err.println("Failed to read secret file: " + e.getMessage());
 			}
 		}
-		// Generate new secret and save it
+		// Generate a new secret and save it
 		String newSecret = generateSecret();
 		try {
 			Files.writeString(path, newSecret);
