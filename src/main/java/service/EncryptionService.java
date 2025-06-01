@@ -16,8 +16,12 @@ import java.util.Base64;
  * The key and salt are only kept in memory for the session and cleared on JVM shutdown.
  * Usage:
  * - After authentication, call setSessionKeyAndSalt(masterPassword, salt) to initialize the session key.
+ *   Note: `setSessionKeyAndSalt` must be called before encrypt() or decrypt() to avoid errors.
  * - Use encrypt() and decrypt() for secure data operations.
- * - The persistent salt is managed in encryption_salt.txt.
+ * - The persistent salt is managed in encryption_salt.dat.
+ * Security Notes:
+ * - Keys and salts are cleared from memory at JVM shutdown via a shutdown hook.
+ * - AES/GCM/NoPadding is used for encryption, ensuring authenticated encryption.
  */
 public class EncryptionService {
 
@@ -119,7 +123,7 @@ public class EncryptionService {
 
 	// Utility to generate or load a persistent salt for PBKDF2
 	public static String getOrCreatePersistentSalt() throws Exception {
-		java.nio.file.Path saltPath = java.nio.file.Paths.get("encryption_salt.txt");
+		java.nio.file.Path saltPath = java.nio.file.Paths.get("encryption_salt.dat"); // Alterado para .dat
 		if (java.nio.file.Files.exists(saltPath)) {
 			return java.nio.file.Files.readString(saltPath).trim();
 		}
