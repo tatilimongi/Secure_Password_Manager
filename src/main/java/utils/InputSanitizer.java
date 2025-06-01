@@ -2,6 +2,13 @@ package utils;
 
 public class InputSanitizer {
     /**
+     * Private constructor to prevent instantiation.
+     */
+    private InputSanitizer() {
+        // Utility class, should not be instantiated
+    }
+
+    /**
      * Sanitizes user-provided input to prevent potential injection attacks.
      *
      * @param input           The raw user input.
