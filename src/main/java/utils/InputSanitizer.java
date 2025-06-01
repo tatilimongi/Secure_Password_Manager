@@ -21,7 +21,12 @@ public class InputSanitizer {
         if (numericOnly && !input.matches("\\d+")) {
             throw new IllegalArgumentException("Input must contain only numeric characters.");
         }
-        if (!numericOnly && input.matches(".*[;,'\"<>].*")) {
+        if (!numericOnly && input.indexOf(';') >= 0 || 
+                    input.indexOf('\'') >= 0 ||
+                    input.indexOf('"') >= 0 ||
+                    input.indexOf('<') >= 0 ||
+                    input.indexOf('>') >= 0 ||
+                    input.indexOf(',') >= 0) {
             throw new IllegalArgumentException("Input contains unsafe characters.");
         }
         return input;
@@ -37,10 +42,10 @@ public class InputSanitizer {
         if (input == null) {
             return null;
         }
-        return input.replaceAll("&", "&amp;")
-                    .replaceAll("<", "&lt;")
-                    .replaceAll(">", "&gt;")
-                    .replaceAll("\"", "&quot;")
-                    .replaceAll("'", "&#39;");
+        return input.replace("&", "&amp;")
+                   .replace("<", "&lt;")
+                   .replace(">", "&gt;")
+                   .replace("\"", "&quot;")
+                   .replace("'", "&#39;");
     }
 }
