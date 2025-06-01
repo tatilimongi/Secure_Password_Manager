@@ -2,17 +2,33 @@
 
 # Secure Password Manager
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<!-- ========== Project Info ========== -->
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-22-blue.svg)](https://www.oracle.com/java/technologies/javase/22-relnote-issues.html)
-[![Build with Maven](https://img.shields.io/badge/build-maven-brightgreen.svg)](https://maven.apache.org/)
+[![Build with Maven](https://img.shields.io/badge/Build-Maven-brightgreen.svg)](https://maven.apache.org/)
 ![Maven Central](https://img.shields.io/badge/Maven-dependencies-blue?logo=apachemaven)
 [![Dependencies](https://img.shields.io/librariesio/github/tatilimongi/Secure_Password_Manager)](https://libraries.io/github/tatilimongi/Secure_Password_Manager)
-[![Test](https://github.com/tatilimongi/Secure_Password_Manager/actions/workflows/test.yml/badge.svg)](https://github.com/tatilimongi/Secure_Password_Manager/actions/workflows/test.yml)
+
+<!-- ========== Features ========== -->
+
+![2FA](https://img.shields.io/badge/2FA-TOTP-green?style=flat)
+![AES Encryption](https://img.shields.io/badge/Encryption-AES256-blue?style=flat)
+![Terminal App](https://img.shields.io/badge/Interface-Terminal-informational?style=flat)
+
+<!-- ========== Project Status ========== -->
+
+![Project Status](https://img.shields.io/badge/status-active-brightgreen?style=flat)
+![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-orange?style=flat)
+
+<!-- ========== GitHub Insights ========== -->
 
 [![Last Commit](https://img.shields.io/github/last-commit/tatilimongi/Secure_Password_Manager.svg)](https://github.com/tatilimongi/Secure_Password_Manager/commits/main)
 [![Commit Activity](https://img.shields.io/github/commit-activity/m/tatilimongi/Secure_Password_Manager.svg)](https://github.com/tatilimongi/Secure_Password_Manager/graphs/commit-activity)
 [![Issues](https://img.shields.io/github/issues/tatilimongi/Secure_Password_Manager.svg)](https://github.com/tatilimongi/Secure_Password_Manager/issues)
 [![Pull Requests](https://img.shields.io/github/issues-pr/tatilimongi/Secure_Password_Manager.svg)](https://github.com/tatilimongi/Secure_Password_Manager/pulls)
+
+<!-- ========== Quality and Security ========== -->
 
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/1909c5e91ece446fbed19ae45659dae4)](https://app.codacy.com/gh/tatilimongi/Secure_Password_Manager/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![CodeQL Advanced](https://github.com/tatilimongi/Secure_Password_Manager/actions/workflows/codeql.yml/badge.svg)](https://github.com/tatilimongi/Secure_Password_Manager/actions/workflows/codeql.yml)
@@ -28,14 +44,29 @@
 [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=tatilimongi_Secure_Password_Manager&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=tatilimongi_Secure_Password_Manager)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=tatilimongi_Secure_Password_Manager&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=tatilimongi_Secure_Password_Manager)
 
-A secure, command-line password manager written in Java. It allows you to safely store, generate, and manage your credentials with strong encryption and modern security features.
+A secure, command-line Password Manager written in Java. It allows you to safely store, generate, and manage your credentials with strong encryption and modern security features.
 
 </div>
+
+## Table of Contents
+- [Features](#features)
+- [Security Notes](#security-notes)
+- [Prerequisites](#prerequisites)
+- [Technologies Used](#technologies-used)
+- [TOTP QR Code Generation](#totp-qr-code-generation)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Running Tests](#running-tests)
+- [File Structure](#file-structure)
+- [Contributing](#contributing)
+- [License](#license)
+- [Disclaimer](#disclaimer)
 
 ## Features
 
 - **Password Generation**: Option to automatically generate strong passwords with customizable length and character sets.
-- **Password Security**: 
+  - **Password Breach Verification**: Generated passwords are checked against breach databases (like HaveIBeenPwned) to ensure they haven't been compromised.
+- **Password Security**:
   - Encryption of stored passwords using industry-standard algorithms (AES-256).
   - Integration with HaveIBeenPwned API to check for compromised passwords.
   - Secure clipboard operations for password copying (clipboard is cleared after a short period).
@@ -43,6 +74,15 @@ A secure, command-line password manager written in Java. It allows you to safely
 - **Two-Factor Authentication (2FA)**: Support for TOTP (Time-based One-Time Password) for enhanced account security.
 - **Master Password**: Protects access to all stored credentials.
 - **Audit and Breach Check**: Easily check if your passwords have been exposed in known data breaches.
+
+## Security Notes
+
+- **Advanced Encryption**: All stored credentials are secured using AES-GCM for authenticated encryption.
+- **Input Sanitization**: User-provided input is rigorously validated to prevent injection attacks or unsafe inputs.
+- **Sensitive Data Cleanup**: Mechanisms are in place to clear encryption keys and sensitive data from memory when the application shuts down.
+- The master password is never stored; only a hash is kept using BCrypt.
+- Clipboard operations are cleared after a short timeout to prevent leaks.
+- Passwords are never logged or displayed in plain text.
 
 ## Prerequisites
 
@@ -99,24 +139,22 @@ To easily set up Two-Factor Authentication (2FA) with authenticator apps (like G
 2. **First-time setup:**
    - You will be prompted to create a master password. This password is required to access your credentials.
 
-3. **Main menu options:**
+3. **Two-Factor Authentication (2FA):**
+   - Set up TOTP for an extra layer of security. Store your TOTP secret securely.
+
+4. **Main menu options:**
+   - List all credentials
    - Add new credential
-   - Retrieve credential
-   - Update credential
-   - Delete credential
-   - Generate strong password
-   - Check password breach status
-   - Configure 2FA (TOTP)
+   - Delete a credential
+   - Copy password to clipboard
+   - Check if any password has been compromised
    - Exit
 
-4. **Password Generation:**
+5. **Password Generation:**
    - Choose password length and character types (uppercase, lowercase, digits, symbols).
 
-5. **Password Breach Check:**
+6. **Password Breach Check:**
    - Enter a password to check if it has been exposed in known data breaches using the HaveIBeenPwned API.
-
-6. **Two-Factor Authentication (2FA):**
-   - Set up TOTP for an extra layer of security. Store your TOTP secret securely.
 
 ## Security Notes
 
@@ -150,4 +188,3 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Disclaimer
 
 This project is for educational purposes. Use at your own risk. Always back up your credentials and never share your master password.
-
