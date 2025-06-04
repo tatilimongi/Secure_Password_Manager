@@ -154,14 +154,7 @@ To easily set up Two-Factor Authentication (2FA) with authenticator apps (like G
    - Choose password length and character types (uppercase, lowercase, digits, symbols).
 
 6. **Password Breach Check:**
-   - Enter a password to check if it has been exposed in known data breaches using the HaveIBeenPwned API.
-
-## Security Notes
-
-- All credentials are encrypted at rest using AES-256.
-- The master password is never stored; only a hash is kept using BCrypt.
-- Clipboard operations are cleared after a short timeout to prevent leaks.
-- Passwords are never logged or displayed in plain text.
+   - Choose a credential to check if the password has been exposed in known data breaches using the HaveIBeenPwned API.
 
 ## Running Tests
 
@@ -174,7 +167,6 @@ mvn test
 
 - `src/main/java/` - Application source code
 - `src/test/java/` - Unit tests
-- `lib/` - External libraries (if any)
 - `target/` - Compiled binaries and packaged JARs
 
 ## Contributing
@@ -188,3 +180,10 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Disclaimer
 
 This project is for educational purposes. Use at your own risk. Always back up your credentials and never share your master password.
+
+---
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Made%20with-%E2%9D%A4-red?logo=github&style=for-the-badge" alt="Made with Love badge">
+</p>
+
