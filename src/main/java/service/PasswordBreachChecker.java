@@ -18,6 +18,12 @@ public class PasswordBreachChecker {
     public static int checkPassword(String password) {
         try {
             // Step 1: SHA-1 hash of the password
+
+            /*
+            SHA-1 is used here because it's specifically required by the HIBP API
+            This is not for cryptographic security, but for API compatibility
+            The k-anonymity model of the API ensures the full hash is never transmitted
+            */
             MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
             byte[] hashBytes = sha1.digest(password.getBytes(StandardCharsets.UTF_8));
             StringBuilder sb = new StringBuilder();
