@@ -77,7 +77,7 @@ public class EncryptionService {
 	 */
 	public static String encrypt(String strToEncrypt) throws Exception {
 		if (strToEncrypt == null) {
-			throw new NullPointerException("Input to encrypt cannot be null");
+			throw new IllegalArgumentException("Input to encrypt cannot be null");
 		}
 		SecretKey key = getSessionSecretKey();
 		Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
@@ -117,7 +117,7 @@ public class EncryptionService {
 			byte[] decrypted = cipher.doFinal(encryptedBytes);
 			return new String(decrypted);
 		} catch (Exception e) {
-			throw new Exception("Decryption failed", e);
+			throw new javax.crypto.BadPaddingException("Decryption failed: " + e.getMessage());
 		}
 	}
 
