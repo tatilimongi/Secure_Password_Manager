@@ -72,7 +72,7 @@ public class AuthService {
         }
 
         if (sessionPassword == null) {
-            throw new Exception("Authentication failed after maximum attempts.");
+            throw new SecurityException("Authentication failed after maximum attempts.");
         }
 
         String salt = EncryptionService.getOrCreatePersistentSalt();
