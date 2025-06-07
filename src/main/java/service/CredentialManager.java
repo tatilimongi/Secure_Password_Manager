@@ -122,14 +122,26 @@ public class CredentialManager {
         password = PasswordGenerator.generate(passwordLength, includeUppercase, includeLowercase, includeNumbers, includeSymbols);
 
     } else {
-        System.out.print("Enter password: ");
-        try {
-            password = InputSanitizer.sanitize(scanner.nextLine(), 64, false);
-        } catch (IllegalArgumentException ex) {
-            System.out.println("Invalid password. " + ex.getMessage());
-            return;
+    System.out.print("Enter password: ");
+    try {
+        password = InputSanitizer.sanitize(scanner.nextLine(), 64, false);
+        
+        // Check if the password has been compromised
+        int breachCount = PasswordBreachChecker.checkPassword(password);
+        if (breachCount > 0) {
+            System.out.printf("WARNING: This password has been found in %d data breaches!%n", breachCount);
+            System.out.print("Do you still want to use this password? (y/n): ");
+            String confirm = scanner.nextLine().toLowerCase();
+            if (!confirm.equals("y")) {
+                System.out.println("Password not saved. Please try again with a different password.");
+                return;
+            }
         }
+    } catch (IllegalArgumentException ex) {
+        System.out.println("Invalid password. " + ex.getMessage());
+        return;
     }
+}
 
     // Encrypt password and store new credential
     try {
