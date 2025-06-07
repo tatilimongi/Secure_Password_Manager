@@ -21,35 +21,47 @@ public class PasswordGenerator {
      * @return A randomly generated password as a String.
      */
     public static String generate(int length, boolean includeUppercase, boolean includeLowercase,
-                                  boolean includeNumbers, boolean includeSymbols) {
+                                boolean includeNumbers, boolean includeSymbols) {
+        String characterPool = buildCharacterPool(includeUppercase, includeLowercase, includeNumbers, includeSymbols);
+        validateInput(length, characterPool);
+        return generateSecurePassword(length, characterPool);
+    }
+
+    private static String buildCharacterPool(boolean includeUppercase, boolean includeLowercase,
+                                           boolean includeNumbers, boolean includeSymbols) {
         StringBuilder characterPool = new StringBuilder();
         if (includeUppercase) characterPool.append(UPPERCASE);
         if (includeLowercase) characterPool.append(LOWERCASE);
         if (includeNumbers) characterPool.append(NUMBERS);
         if (includeSymbols) characterPool.append(SYMBOLS);
+        return characterPool.toString();
+    }
 
+    private static void validateInput(int length, String characterPool) {
         if (characterPool.isEmpty() || length <= 0) {
             throw new IllegalArgumentException("Invalid parameters for password generation.");
         }
+    }
 
+    private static String generateSecurePassword(int length, String characterPool) {
         String password;
         int breachCount;
         do {
-            StringBuilder passwordBuilder = new StringBuilder(length);
-            for (int i = 0; i < length; i++) {
-                int index = random.nextInt(characterPool.length());
-                passwordBuilder.append(characterPool.charAt(index));
-            }
-            password = passwordBuilder.toString();
-            
-            // Check with PasswordBreachChecker
+            password = generateRandomPassword(length, characterPool);
             breachCount = PasswordBreachChecker.checkPassword(password);
-
             if (breachCount > 0) {
                 System.out.printf("Generated password found in %d breach(es). Regenerating a safer password...%n", breachCount);
             }
-        } while (breachCount > 0); // Regenerate if the password is compromised
-
+        } while (breachCount > 0);
         return password;
+    }
+
+    private static String generateRandomPassword(int length, String characterPool) {
+        StringBuilder passwordBuilder = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int index = random.nextInt(characterPool.length());
+            passwordBuilder.append(characterPool.charAt(index));
+        }
+        return passwordBuilder.toString();
     }
 }
