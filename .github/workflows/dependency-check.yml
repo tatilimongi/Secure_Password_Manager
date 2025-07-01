@@ -32,15 +32,14 @@ jobs:
       - name: Build with Maven (skip tests)
         run: mvn -B package --file pom.xml -DskipTests
 
+      - name: Install OWASP Dependency-Check CLI
+        run: |
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v8.4.2/dependency-check-8.4.2-release.zip
+          unzip dependency-check-8.4.2-release.zip -d $HOME/dc
+
       - name: Run OWASP Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: 'Secure_Password_Manager'
-          path: '.'
-          format: 'HTML'
-          out: 'reports'
-        env:
-          JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
+        run: |
+          $HOME/dc/dependency-check/bin/dependency-check.sh --project "Secure_Password_Manager" --scan . --format HTML --out reports
 
       - name: Upload Dependency-Check report as an artifact
         uses: actions/upload-artifact@v4
