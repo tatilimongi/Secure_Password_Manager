@@ -38,8 +38,16 @@ jobs:
           unzip dependency-check-12.1.0-release.zip -d $HOME/dc
 
       - name: Run OWASP Dependency-Check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
-          $HOME/dc/dependency-check/bin/dependency-check.sh --project "Secure_Password_Manager" --scan . --format HTML --out reports --disableAssembly
+          $HOME/dc/dependency-check/bin/dependency-check.sh \
+            --project "Secure_Password_Manager" \
+            --scan . \
+            --format HTML \
+            --out reports \
+            --disableAssembly \
+            --nvdApiKey "$NVD_API_KEY"
 
       - name: Upload Dependency-Check report as an artifact
         uses: actions/upload-artifact@v4
