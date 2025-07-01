@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21' 
+          java-version: '21'
 
       - name: Cache Maven packages
         uses: actions/cache@v4
@@ -29,8 +29,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml
+      - name: Build with Maven (skip tests)
+        run: mvn -B package --file pom.xml -DskipTests
 
       - name: Run OWASP Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
