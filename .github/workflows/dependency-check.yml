@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17' # ajuste para sua versão do Java
+          java-version: '17' 
 
       - name: Cache Maven packages
         uses: actions/cache@v4
@@ -33,7 +33,7 @@ jobs:
         run: mvn -B package --file pom.xml
 
       - name: Run OWASP Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@v4
+        uses: dependency-check/Dependency-Check_Action@v6
         with:
           project: 'Secure_Password_Manager'
           path: '.'
@@ -41,7 +41,7 @@ jobs:
           out: 'reports'
 
       - name: Upload Dependency-Check report as an artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dependency-check-report
           path: reports/dependency-check-report.html
