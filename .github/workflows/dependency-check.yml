@@ -29,6 +29,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: Cache Dependency-Check data
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/dependency-check
+          key: ${{ runner.os }}-dependency-check-${{ hashFiles('**/pom.xml') }}
+
       - name: Build with Maven (skip tests)
         run: mvn -B package --file pom.xml -DskipTests
 
@@ -47,7 +53,9 @@ jobs:
             --format HTML \
             --out reports \
             --disableAssembly \
-            --nvdApiKey "$NVD_API_KEY"
+            --nvdApiKey "$NVD_API_KEY" \
+            --data ~/.cache/dependency-check \
+          || true
 
       - name: Upload Dependency-Check report as an artifact
         uses: actions/upload-artifact@v4
